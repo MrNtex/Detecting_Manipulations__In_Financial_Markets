@@ -18,8 +18,13 @@ def inspect_book_depth(zip_filepath: str):
     except Exception as e:
         print(f"Error reading the file: {e}")
 
-dir_path = "data/"
-file_name = "BTCUSDT-bookDepth-2026-01-31.zip" 
-
-if __name__ == "__main__":
-    inspect_book_depth(dir_path + file_name)
+def convert_to_dataframe(zip_filepath: str) -> pd.DataFrame:
+    
+    try:
+        df = pd.read_csv(zip_filepath, compression='zip')
+        print(f"Data loaded successfully! Total rows: {len(df)}")
+        return df
+        
+    except Exception as e:
+        print(f"Error reading the file: {e}")
+        return pd.DataFrame()
