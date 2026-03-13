@@ -26,23 +26,38 @@ def build_feature_matrix(zip_filepath: str) -> pd.DataFrame:
             new_column_names.append(f"ask_depth_{pct}")
             
     matrix_df.columns = new_column_names
-    
-    # Fill missing values. If a percentage level has no data at a specific second, depth is 0.
     matrix_df = matrix_df.fillna(0)
     
-    # --- FEATURE ENGINEERING ---
-    # Now that the data is wide, we can calculate structural anomalies instantly.
+    # --- DYNAMIC FEATURE ENGINEERING ---
+    print("Calculating dynamic features...")
     
-    # Example: Imbalance at the tightest spread (0.2%)
-    # If this violently shifts, someone is spoofing the top of the book.
-    # We add 1e-8 to the denominator to prevent division by zero errors.
-    matrix_df['imbalance_0.2'] = (matrix_df['bid_depth_0.2'] - matrix_df['ask_depth_0.2']) / \
-                                 (matrix_df['bid_depth_0.2'] + matrix_df['ask_depth_0.2'] + 1e-8)
+    # 1. Figure out exactly which percentages are in this specific file
+    bid_cols = [col for col in matrix_df.columns if 'bid_depth' in col]
+    ask_cols = [col for col in matrix_df.columns if 'ask_depth' in col]
     
-    # Example: Deep Book Volume (Sum of 3%, 4%, and 5% levels)
-    # Spoofers hide fake walls deep in the book.
-    matrix_df['deep_bid_vol'] = matrix_df['bid_depth_3.0'] + matrix_df['bid_depth_4.0'] + matrix_df['bid_depth_5.0']
-    matrix_df['deep_ask_vol'] = matrix_df['ask_depth_3.0'] + matrix_df['ask_depth_4.0'] + matrix_df['ask_depth_5.0']
+    # 2. Sort the actual column names by extracting the float value temporarily for sorting
+    # This guarantees we use the exact string Pandas created, avoiding KeyErrors
+    bid_cols_sorted = sorted(bid_cols, key=lambda x: float(x.split('_')[2]))
+    ask_cols_sorted = sorted(ask_cols, key=lambda x: float(x.split('_')[2]))
+    
+    # 3. Get the tightest spread (Top of Book)
+    top_bid = bid_cols_sorted[0]
+    top_ask = ask_cols_sorted[0]
+    print(f"Top of book levels found: {top_bid} and {top_ask}")
+    
+    # Calculate Imbalance at the tightest available spread
+    matrix_df['imbalance_top'] = (matrix_df[top_bid] - matrix_df[top_ask]) / \
+                                 (matrix_df[top_bid] + matrix_df[top_ask] + 1e-8)
+    
+    # 4. Get the deepest liquidity (Sum of the 3 deepest levels available)
+    deepest_bids = bid_cols_sorted[-3:]
+    deepest_asks = ask_cols_sorted[-3:]
+    print(f"Deep book levels found: Bids {deepest_bids}, Asks {deepest_asks}")
+    
+    # Calculate Deep Book Volume
+    # sum(axis=1) safely adds multiple columns together row by row
+    matrix_df['deep_bid_vol'] = matrix_df[deepest_bids].sum(axis=1)
+    matrix_df['deep_ask_vol'] = matrix_df[deepest_asks].sum(axis=1)
     
     print("Transformation complete!")
     return matrix_df

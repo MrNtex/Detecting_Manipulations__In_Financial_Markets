@@ -1,5 +1,5 @@
 dir_path = "data/"
-file_name = "BTCUSDT-bookDepth-2026-01-31.zip" 
+file_name = "BTCUSDT-bookDepth-2023-10-16.zip" 
 
 from manage_data import convert_to_dataframe
 from detect_anomalies import detect_anomalies
@@ -15,4 +15,4 @@ if __name__ == "__main__":
     detect_anomalies(X_matrix)
 
     X_matrix.index = X_matrix.index.astype(str)
-    visualize_anomaly(X_matrix, '2026-01-31 18:44:30')
+    visualize_anomaly(X_matrix, '2023-10-16 13:00:00')
