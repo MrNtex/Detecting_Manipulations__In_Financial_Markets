@@ -1,12 +1,11 @@
 import pandas as pd
 import numpy as np
 
-def build_feature_matrix(zip_filepath: str) -> pd.DataFrame:
+def build_feature_matrix(df: pd.DataFrame) -> pd.DataFrame:
     """
     Transforms raw Binance daily depth data into a wide feature matrix 
     ready for unsupervised machine learning.
     """
-    df = pd.read_csv(zip_filepath, compression='zip')
     
     # We only need the core structural data for now
     df_subset = df[['timestamp', 'percentage', 'depth']]

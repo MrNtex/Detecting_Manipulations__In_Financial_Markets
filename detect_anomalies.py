@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from sklearn.ensemble import IsolationForest
 import pandas as pd
 
@@ -27,3 +29,42 @@ def detect_anomalies(matrix_df: pd.DataFrame) -> pd.DataFrame:
     print(anomalies[cols_to_print].head(5))
     
     return anomalies
+
+def rolling_detection(feature_files, window=7):
+
+    for i in range(window, len(feature_files)):
+
+        train_files = feature_files[i-window:i]
+        test_file = feature_files[i]
+
+        print("\nTraining on:", train_files)
+        print("Testing on:", test_file)
+
+        # Load training data
+        train_df = pd.concat(
+            [pd.read_parquet(f) for f in train_files]
+        )
+
+        model = IsolationForest(
+            n_estimators=100,
+            contamination=0.01,
+            random_state=42
+        )
+
+        model.fit(train_df.values)
+
+        # Load test day
+        test_df = pd.read_parquet(test_file)
+
+        preds = model.predict(test_df.values)
+        scores = model.decision_function(test_df.values)
+
+        test_df["anomaly_label"] = preds
+        test_df["anomaly_score"] = scores
+
+        anomalies = test_df[test_df["anomaly_label"] == -1]
+
+        print("Anomalies detected:", len(anomalies))
+
+if __name__ == "__main__":
+    rolling_detection(sorted(Path("data/features/").glob("*.parquet")))
