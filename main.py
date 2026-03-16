@@ -1,5 +1,6 @@
 from pathlib import Path
 import pandas as pd
+import re
 
 from manage_data import download_range, process_day
 from detect_anomalies import rolling_detection
@@ -21,7 +22,7 @@ def ensure_features():
     feature_files = []
 
     for raw_file in raw_files:
-        date = raw_file.name.split("-")[-1].replace(".zip", "")
+        date = re.search(r'\d{4}-\d{2}-\d{2}', raw_file.name).group()
         feature_path = FEATURE_DIR / f"features_{date}.parquet"
 
         if feature_path.exists():

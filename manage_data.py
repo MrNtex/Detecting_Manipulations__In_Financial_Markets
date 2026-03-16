@@ -2,6 +2,7 @@ import pandas as pd
 import requests
 from pathlib import Path
 from datetime import datetime, timedelta
+import re
 
 from build_feature_matrix import build_feature_matrix
 
@@ -11,7 +12,7 @@ DATA_DIR = Path("data/raw/")
 def process_day(zip_file):
     raw_df = convert_to_dataframe(zip_file)
     features = build_feature_matrix(raw_df)
-    date = zip_file.name.split("-")[-1].replace(".zip", "")
+    date = re.search(r'\d{4}-\d{2}-\d{2}', zip_file.name).group()
     output = Path(f"data/features/features_{date}.parquet")
     output.parent.mkdir(parents=True, exist_ok=True)
     features.to_parquet(output)

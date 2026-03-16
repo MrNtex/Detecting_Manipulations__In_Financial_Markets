@@ -29,7 +29,7 @@ class LOBDataset(Dataset):
 
     def __len__(self):
         # If we have 1000 rows and a window of 60, we can only make 940 windows
-        return len(self.data) - self.self.seq_len
+        return len(self.data) - self.seq_len
 
     def __getitem__(self, idx):
         # This is the magic. It simply slices 60 rows on the fly.

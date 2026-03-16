@@ -30,6 +30,7 @@ def load_training_data():
             train_dfs.append(pd.read_parquet(file_path))
             
     # Combine them into one massive DataFrame
+    
     df_train = pd.concat(train_dfs)
     
     # Load Day 8 as our validation set to ensure we aren't overfitting
