@@ -11,8 +11,9 @@ DATA_DIR = Path("data/raw/")
 def process_day(zip_file):
     raw_df = convert_to_dataframe(zip_file)
     features = build_feature_matrix(raw_df)
-    date = str(zip_file).split("-")[-1].replace(".zip", "")
+    date = zip_file.name.split("-")[-1].replace(".zip", "")
     output = Path(f"data/features/features_{date}.parquet")
+    output.parent.mkdir(parents=True, exist_ok=True)
     features.to_parquet(output)
     
 def download_range(start_date: str, end_date: str):

@@ -3,6 +3,9 @@ from pathlib import Path
 from sklearn.ensemble import IsolationForest
 import pandas as pd
 
+ANOM_DIR = Path("data/anomalies")
+ANOM_DIR.mkdir(exist_ok=True)
+
 def detect_anomalies(matrix_df: pd.DataFrame) -> pd.DataFrame:
     print("Training Isolation Forest Baseline...")
     
@@ -64,6 +67,9 @@ def rolling_detection(feature_files, window=7):
 
         anomalies = test_df[test_df["anomaly_label"] == -1]
 
+        date = test_file.name.split("_")[1].replace(".parquet", "")
+
+        anomalies.to_parquet(ANOM_DIR / f"anomalies_{date}.parquet")
         print("Anomalies detected:", len(anomalies))
 
 if __name__ == "__main__":

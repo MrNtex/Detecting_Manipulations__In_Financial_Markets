@@ -1,45 +1,53 @@
+import pandas as pd
 import matplotlib.pyplot as plt
-import numpy as np
+import matplotlib.dates as mdates
+from pathlib import Path
 
-def visualize_anomaly(matrix_df, target_timestamp):
-  print(f"Generating Order Book Heatmap for {target_timestamp}...")
-  
-  # Extract just the row for our target anomaly
-  anomaly_row = matrix_df.loc[target_timestamp]
-  
-  # Separate the bid and ask column names
-  bid_cols = [col for col in matrix_df.columns if 'bid_depth' in col]
-  ask_cols = [col for col in matrix_df.columns if 'ask_depth' in col]
-  
-  # Sort them so they plot correctly from the mid-price outward
-  # Bids: 0.2, 1.0, 2.0, 3.0...
-  bid_cols_sorted = sorted(bid_cols, key=lambda x: float(x.split('_')[2]))
-  ask_cols_sorted = sorted(ask_cols, key=lambda x: float(x.split('_')[2]))
-  
-  # Extract the actual volume values
-  bid_vols = anomaly_row[bid_cols_sorted].values
-  ask_vols = anomaly_row[ask_cols_sorted].values
-  
-  # X-axis labels (Percentage from mid-price)
-  percentages = [x.split('_')[2] + '%' for x in bid_cols_sorted]
-  
-  # Create the visualization
-  fig, ax = plt.subplots(figsize=(12, 6))
-  
-  # Plot Bids (Green, pointing left/down) and Asks (Red, pointing right/up)
-  x_pos = np.arange(len(percentages))
-  width = 0.4
-  
-  ax.bar(x_pos - width/2, bid_vols, width, label='Bids (Buyers)', color='green', alpha=0.7)
-  ax.bar(x_pos + width/2, ask_vols, width, label='Asks (Sellers)', color='red', alpha=0.7)
-  
-  ax.set_ylabel('Total Volume Resting')
-  ax.set_xlabel('Distance from Mid-Price')
-  ax.set_title(f'Limit Order Book Structural Anomaly at {target_timestamp}\n(Notice the massive volume disparity)')
-  ax.set_xticks(x_pos)
-  ax.set_xticklabels(percentages)
-  ax.legend()
-  ax.grid(True, linestyle='--', alpha=0.5)
-  
-  plt.tight_layout()
-  plt.show()
+PLOT_DIR = Path("data/plots")
+PLOT_DIR.mkdir(parents=True, exist_ok=True)
+PRICE_FILE = Path("data/price/btc_price_oct_2023.parquet")
+
+def visualize_price_anomalies(anomaly_file: Path, date_str: str):
+    # 1. Load local anomalies
+    try:
+        df_anom = pd.read_parquet(anomaly_file)
+    except Exception as e:
+        print(f"Error reading {anomaly_file}: {e}")
+        return
+
+    if df_anom.empty:
+        return
+
+    threshold = df_anom['anomaly_score'].quantile(0.03)
+    df_anom = df_anom[df_anom['anomaly_score'] <= threshold]
+    
+    print(f"Plotting {len(df_anom)} anomalies for {date_str}...")
+    
+    # 2. Load the LOCAL price data (Instant)
+    df_price_full = pd.read_parquet(PRICE_FILE)
+    
+    # Filter the month of price data down to just this specific day
+    df_price_day = df_price_full.loc[date_str]
+
+    # 3. Align Anomaly Timestamps with Price Minutes
+    anomaly_dt = pd.to_datetime(df_anom.index).floor('min')
+    anomaly_prices = df_price_day.loc[df_price_day.index.intersection(anomaly_dt), 'close']
+
+    # 4. Build the Visualization
+    fig, ax = plt.subplots(figsize=(14, 7))
+    
+    ax.plot(df_price_day.index, df_price_day['close'], color='black', linewidth=1.2, label='BTC/USDT Mid-Price')
+    ax.scatter(anomaly_prices.index, anomaly_prices.values, color='red', s=100, zorder=5, 
+               edgecolor='black', alpha=0.8, label='LOB Structural Anomaly')
+
+    ax.set_title(f"Unsupervised LOB Anomaly Detection vs Price Action ({date_str})", fontsize=14, fontweight='bold')
+    ax.set_ylabel("BTC Price (USDT)", fontsize=12)
+    ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
+    plt.xticks(rotation=45)
+    ax.grid(True, linestyle='--', alpha=0.5)
+    ax.legend(loc='upper left')
+    
+    plt.tight_layout()
+    output_path = PLOT_DIR / f"price_anomalies_{date_str}.png"
+    plt.savefig(output_path, dpi=150)
+    plt.close()
