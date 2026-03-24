@@ -14,7 +14,7 @@ FEATURE_DIR = Path("data/features")
 ANOM_DIR = Path("data/anomalies")
 MODEL_PATH = Path("models/lstm_autoencoder.pth")
 TARGET_DAY = "2023-10-16"
-SEQ_LEN = 60
+SEQ_LEN = 10
 BATCH_SIZE = 256
 
 def get_fitted_scaler(first_day="2023-10-01", last_day="2023-10-07"):

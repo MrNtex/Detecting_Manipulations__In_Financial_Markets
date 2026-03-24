@@ -37,7 +37,6 @@ def rolling_detection(feature_files, window=7):
         print("\nTraining on:", train_files)
         print("Testing on:", test_file)
 
-        # Load training data
         train_df = pd.concat(
             [pd.read_parquet(f) for f in train_files]
         )
@@ -50,7 +49,6 @@ def rolling_detection(feature_files, window=7):
 
         model.fit(train_df.values)
 
-        # Load test day
         test_df = pd.read_parquet(test_file)
 
         preds = model.predict(test_df.values)
