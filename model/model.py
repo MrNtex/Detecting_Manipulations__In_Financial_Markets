@@ -30,7 +30,7 @@ class LSTMAutoencoder(nn.Module):
         self.decoder_lstm2 = nn.LSTM(
             input_size=128, 
             hidden_size=n_features, 
-            num_layers=1, 
+            num_layers=1,  
             batch_first=True
         )
         

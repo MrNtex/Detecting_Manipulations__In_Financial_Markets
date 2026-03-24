@@ -4,11 +4,9 @@ import torch.optim as optim
 import pandas as pd
 from pathlib import Path
 
-# Import the classes we just built
 from model import LSTMAutoencoder
 from dataset import create_dataloaders
 
-# Configuration
 FEATURE_DIR = Path("data/features")
 SEQ_LEN = 60
 BATCH_SIZE = 256
@@ -16,10 +14,6 @@ EPOCHS = 15
 LEARNING_RATE = 0.001
 
 def load_training_data():
-    """
-    Loads a week of 'normal' data to train the baseline.
-    We'll use Oct 1 through Oct 7 as our clean training baseline.
-    """
     print("Loading Parquet files for training baseline...")
     train_dfs = []
     
@@ -39,11 +33,9 @@ def load_training_data():
     return df_train, df_val
 
 def train_autoencoder():
-    # 1. Setup Device (Use GPU if available, otherwise CPU)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Training on device: {device}")
 
-    # 2. Load Data
     df_train, df_val = load_training_data()
     n_features = df_train.shape[1]
     
@@ -51,10 +43,7 @@ def train_autoencoder():
         df_train, df_val, seq_len=SEQ_LEN, batch_size=BATCH_SIZE
     )
 
-    # 3. Initialize Model, Loss, and Optimizer
     model = LSTMAutoencoder(seq_len=SEQ_LEN, n_features=n_features, embedding_dim=64).to(device)
-    
-    # Mean Squared Error is standard for Autoencoder reconstruction
     criterion = nn.MSELoss() 
     optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
 

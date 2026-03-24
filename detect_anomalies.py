@@ -7,12 +7,8 @@ ANOM_DIR = Path("data/anomalies")
 ANOM_DIR.mkdir(exist_ok=True)
 
 def detect_anomalies(matrix_df: pd.DataFrame) -> pd.DataFrame:
-    print("Training Isolation Forest Baseline...")
-    
-    # Initialize the unsupervised model
     iso_forest = IsolationForest(n_estimators=100, contamination=0.01, random_state=42)
     
-    # Fit the model and predict outliers
     predictions = iso_forest.fit_predict(matrix_df.values)
     scores = iso_forest.decision_function(matrix_df.values)
     
@@ -25,8 +21,6 @@ def detect_anomalies(matrix_df: pd.DataFrame) -> pd.DataFrame:
     print(f"\nModel finished! Flagged {len(anomalies)} structural anomalies.")
     
     print("\n=== TOP 5 MOST EXTREME ANOMALIES (The 'Blast Zones') ===")
-    
-    # FIXED: Changed 'imbalance_0.2' to 'imbalance_top' to match our dynamic naming
     cols_to_print = ['anomaly_score', 'imbalance_top', 'deep_bid_vol', 'deep_ask_vol']
     
     print(anomalies[cols_to_print].head(5))

@@ -52,9 +52,6 @@ def download_range(start_date: str, end_date: str):
     return files
 
 def inspect_book_depth(zip_filepath: str):
-    """
-    Reads a zipped Binance historical data file and prints the first 10 rows.
-    """
     print(f"Loading data from: {zip_filepath}...")
     
     try:
