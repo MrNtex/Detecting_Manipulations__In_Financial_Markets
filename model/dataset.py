@@ -25,20 +25,9 @@ class LOBDataset(Dataset):
         return window, window
 
 def create_dataloaders(train_df, test_df, seq_len=60, batch_size=256):
-    """
-    Wraps the datasets in DataLoaders for efficient batching and multi-processing.
-    """
-    print("Building Training Dataset...")
     train_dataset = LOBDataset(train_df, seq_len=seq_len, is_train=True)
-    
-    print("Building Testing Dataset...")
-    # Pass the scaler from the train set to the test set to prevent data leakage
     test_dataset = LOBDataset(test_df, seq_len=seq_len, scaler=train_dataset.scaler, is_train=False)
-    
-    # DataLoader handles the batching (e.g., passing 256 windows to the GPU at once)
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
-    
-    # We do NOT shuffle the test loader so we can plot anomalies in chronological order later
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, drop_last=False)
     
     return train_loader, test_loader, train_dataset.scaler
