@@ -2,11 +2,6 @@ import pandas as pd
 import numpy as np
 
 def build_feature_matrix(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Transforms raw Binance daily depth data into a wide feature matrix 
-    ready for unsupervised machine learning.
-    """
-    
     df_subset = df[['timestamp', 'percentage', 'depth']]
     matrix_df = df_subset.pivot(index='timestamp', columns='percentage', values='depth')
     
@@ -20,7 +15,6 @@ def build_feature_matrix(df: pd.DataFrame) -> pd.DataFrame:
     matrix_df.columns = new_column_names
     matrix_df = matrix_df.fillna(0)
     
-    print("Calculating dynamic features...")
     bid_cols = [col for col in matrix_df.columns if 'bid_depth' in col]
     ask_cols = [col for col in matrix_df.columns if 'ask_depth' in col]
     
@@ -46,11 +40,8 @@ def build_feature_matrix(df: pd.DataFrame) -> pd.DataFrame:
 # Run it
 if __name__ == "__main__":
     file_name = "YOUR_DOWNLOADED_FILE.zip" 
-    
-    # Build the matrix
     X_matrix = build_feature_matrix(file_name)
     
-    # Inspect the final ML-ready structure
     print("\n=== The Final Feature Matrix (X) ===")
     print(X_matrix.head())
     print(f"\nMatrix Shape: {X_matrix.shape} (Rows: Timestamps, Columns: Features)")

@@ -6,7 +6,7 @@ import re
 
 from build_feature_matrix import build_feature_matrix
 
-BASE_URL = "https://data.binance.vision/data/futures/um/daily/bookDepth/BTCUSDT/"
+BASE_URL = "https://data.binance.vision/?prefix=data/futures/um/daily/bookDepth/"
 DATA_DIR = Path("data/raw/")
     
 def process_day(zip_file):

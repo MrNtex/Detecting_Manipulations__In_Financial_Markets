@@ -51,3 +51,9 @@ def visualize_price_anomalies(anomaly_file: Path, date_str: str):
     output_path = PLOT_DIR / f"price_anomalies_{date_str}.png"
     plt.savefig(output_path, dpi=150)
     plt.close()
+
+if __name__ == "__main__":
+    visualize_price_anomalies(
+        anomaly_file=Path("data/anomalies/anomalies_2023-10-16.parquet"),
+        date_str="2023-10-16"
+    )
