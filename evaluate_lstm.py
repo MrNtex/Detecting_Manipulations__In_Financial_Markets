@@ -21,7 +21,7 @@ def get_fitted_scaler(first_day="2023-10-01", last_day="2023-10-07"):
     train_dfs = []
     day = first_day
     while day <= last_day:
-        file_path = FEATURE_DIR / f"features_{first_day}.parquet"
+        file_path = FEATURE_DIR / f"features_{day}.parquet"
         if file_path.exists():
             train_dfs.append(pd.read_parquet(file_path))
         day = pd.to_datetime(day) + pd.Timedelta(days=1)
@@ -47,7 +47,7 @@ def run_lstm_inference():
 
     dataset = LOBDataset(df_target, seq_len=SEQ_LEN, scaler=scaler, is_train=False)
     loader = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=False)
-    criterion = nn.MSELoss(reduction='none') # 'none' so we get the error for EVERY row
+    criterion = nn.MSELoss(reduction='none')
     
     print("Scoring sequences with LSTM...")
     anomaly_scores = []
@@ -68,8 +68,6 @@ def run_lstm_inference():
     
     df_results = pd.DataFrame(index=valid_timestamps)
     df_results['anomaly_score'] = anomaly_scores
-    
-    # Invert the logic to match Isolation Forest (lower score = more anomalous)
     df_results['anomaly_score'] = -df_results['anomaly_score'] 
     
     output_path = ANOM_DIR / f"lstm_anomalies_{TARGET_DAY}.parquet"

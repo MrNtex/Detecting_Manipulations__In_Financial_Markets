@@ -54,7 +54,6 @@ def train_autoencoder():
             optimizer.zero_grad()
             reconstruction = model(batch_features)
             loss = criterion(reconstruction, batch_targets)
-
             loss.backward()
             optimizer.step()
             
