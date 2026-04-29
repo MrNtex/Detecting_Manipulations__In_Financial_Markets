@@ -27,17 +27,36 @@ def build_feature_matrix(df: pd.DataFrame) -> pd.DataFrame:
     
     matrix_df['imbalance_top'] = (matrix_df[top_bid] - matrix_df[top_ask]) / \
                                  (matrix_df[top_bid] + matrix_df[top_ask] + 1e-8)
-    deepest_bids = bid_cols_sorted[-3:]
-    deepest_asks = ask_cols_sorted[-3:]
+    
+    K = min(len(bid_cols_sorted), len(ask_cols_sorted))
+    
+    weighted_bid_sum = np.zeros(len(matrix_df))
+    weighted_total_sum = np.zeros(len(matrix_df))
+    
+    alpha = 0.5 # (hyperparameter)
+    
+    for k in range(K):
+        # (exponential weight decay: e^(-alpha * k))
+        omega_k = np.exp(-alpha * k)
+
+        V_b_k = matrix_df[bid_cols_sorted[k]]
+        V_a_k = matrix_df[ask_cols_sorted[k]]
+        weighted_bid_sum += omega_k * V_b_k
+        weighted_total_sum += omega_k * (V_b_k + V_a_k)
+        
+    matrix_df['imbalance_multilevel'] = weighted_bid_sum / (weighted_total_sum + 1e-8)
+
+    # (hyperparameter)
+    DEEPEST_LVLS = 3
+    deepest_bids = bid_cols_sorted[-DEEPEST_LVLS:]
+    deepest_asks = ask_cols_sorted[-DEEPEST_LVLS:]
     print(f"Deep book levels found: Bids {deepest_bids}, Asks {deepest_asks}")
     
     matrix_df['deep_bid_vol'] = matrix_df[deepest_bids].sum(axis=1)
     matrix_df['deep_ask_vol'] = matrix_df[deepest_asks].sum(axis=1)
     
-    print("Transformation complete!")
     return matrix_df
 
-# Run it
 if __name__ == "__main__":
     file_name = "YOUR_DOWNLOADED_FILE.zip" 
     X_matrix = build_feature_matrix(file_name)
