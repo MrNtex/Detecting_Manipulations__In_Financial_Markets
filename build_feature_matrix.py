@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
 
+from hawkes_features import calculate_hawkes_approximation
+
 def build_feature_matrix(df: pd.DataFrame) -> pd.DataFrame:
     df_subset = df[['timestamp', 'percentage', 'depth']]
     matrix_df = df_subset.pivot(index='timestamp', columns='percentage', values='depth')
@@ -13,7 +15,7 @@ def build_feature_matrix(df: pd.DataFrame) -> pd.DataFrame:
             new_column_names.append(f"ask_depth_{pct}")
             
     matrix_df.columns = new_column_names
-    matrix_df = matrix_df.fillna(0)
+    matrix_df = matrix_df.fillna(0).sort_index()
     
     bid_cols = [col for col in matrix_df.columns if 'bid_depth' in col]
     ask_cols = [col for col in matrix_df.columns if 'ask_depth' in col]
@@ -23,7 +25,7 @@ def build_feature_matrix(df: pd.DataFrame) -> pd.DataFrame:
     
     top_bid = bid_cols_sorted[0]
     top_ask = ask_cols_sorted[0]
-    print(f"Top of book levels found: {top_bid} and {top_ask}")
+    # print(f"Top of book levels found: {top_bid} and {top_ask}")
     
     matrix_df['imbalance_top'] = (matrix_df[top_bid] - matrix_df[top_ask]) / \
                                  (matrix_df[top_bid] + matrix_df[top_ask] + 1e-8)
@@ -54,6 +56,14 @@ def build_feature_matrix(df: pd.DataFrame) -> pd.DataFrame:
     
     matrix_df['deep_bid_vol'] = matrix_df[deepest_bids].sum(axis=1)
     matrix_df['deep_ask_vol'] = matrix_df[deepest_asks].sum(axis=1)
+
+    matrix_df = calculate_hawkes_approximation(
+        matrix_df=matrix_df, 
+        bid_cols=bid_cols_sorted, 
+        ask_cols=ask_cols_sorted,
+        distance_decay=1.5,
+        decay_span=10
+    )
     
     return matrix_df
 
